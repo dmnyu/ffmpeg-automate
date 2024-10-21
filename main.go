@@ -39,6 +39,19 @@ func init() {
 	flag.StringVar(&filePtn, "pattern", "", "")
 }
 
+func getCmdsAndOutputFile(inputFile string) ([]string, string) {
+	name := filepath.Base(inputFile)
+	profile, err := getProfile(filePtn)
+	if err != nil {
+		panic(err)
+	}
+	cmds := []string{"-i", inputFile}
+	cmds = append(cmds, profile.Args...)
+	outputFile := filepath.Join(targetDirectory, strings.ReplaceAll(name, filePtn, profile.Ext))
+	cmds = append(cmds, outputFile)
+	return cmds, outputFile
+}
+
 func main() {
 	flag.Parse()
 	fPtn := regexp.MustCompile(fmt.Sprintf("%s", filePtn))
@@ -50,34 +63,32 @@ func main() {
 	for _, entry := range files {
 		name := entry.Name()
 
-		//create a log file
-		ffmpegLog, err := os.Create(filepath.Join(targetDirectory, fmt.Sprintf("%s.log", name)))
-		if err != nil {
-			panic(err)
-		}
-		defer ffmpegLog.Close()
-		writer := bufio.NewWriter(ffmpegLog)
-
 		if fPtn.MatchString(name) {
-			inputFile := filepath.Join(targetDirectory, name)
-			profile, err := getProfile(filePtn)
+
+			//create a log file
+			ffmpegLog, err := os.Create(filepath.Join(targetDirectory, fmt.Sprintf("%s.log", name)))
 			if err != nil {
 				panic(err)
 			}
-			cmds := []string{"-i", inputFile}
-			cmds = append(cmds, profile.Args...)
-			outputFile := filepath.Join(targetDirectory, strings.ReplaceAll(name, filePtn, profile.Ext))
-			cmds = append(cmds, outputFile)
+			defer ffmpegLog.Close()
+			writer := bufio.NewWriter(ffmpegLog)
 
+			//create the input file
+			inputFile := filepath.Join(targetDirectory, name)
 			fmt.Printf("Transcoding: %s\n", inputFile)
+
+			//get the ffmpg arguments and output file
+			cmds, outputFile := getCmdsAndOutputFile(inputFile)
 			cmd := exec.Command("ffmpeg", cmds...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = writer
 			if err := cmd.Run(); err != nil {
 				panic(err)
 			}
+
+			//done!
 			writer.Flush()
-			fmt.Printf("transcoded: %s\n", outputFile)
+			fmt.Printf("Transcoded: %s\n", outputFile)
 		}
 	}
 }
