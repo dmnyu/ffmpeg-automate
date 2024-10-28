@@ -16,40 +16,19 @@ var (
 	filePtn         string
 )
 
+var profileMap = map[string]Profile{
+	"_d.wav": {Args: []string{"-c:a", "aac"}, Ext: "_s.m4a"},
+	"_m.wav": {Args: []string{"-c:a", "aac"}, Ext: "_s.m4a"},
+}
+
 type Profile struct {
 	Args []string
 	Ext  string
 }
 
-var profileMap = map[string]Profile{
-	"_d.wav": {Args: []string{"-c:a", "aac"}, Ext: "_s.m4a"},
-}
-
-func getProfile(profile string) (Profile, error) {
-	for k, y := range profileMap {
-		if k == profile {
-			return y, nil
-		}
-	}
-	return Profile{}, fmt.Errorf("ERROR")
-}
-
 func init() {
 	flag.StringVar(&targetDirectory, "target", "", "")
 	flag.StringVar(&filePtn, "pattern", "", "")
-}
-
-func getCmdsAndOutputFile(inputFile string) ([]string, string) {
-	name := filepath.Base(inputFile)
-	profile, err := getProfile(filePtn)
-	if err != nil {
-		panic(err)
-	}
-	cmds := []string{"-i", inputFile}
-	cmds = append(cmds, profile.Args...)
-	outputFile := filepath.Join(targetDirectory, strings.ReplaceAll(name, filePtn, profile.Ext))
-	cmds = append(cmds, outputFile)
-	return cmds, outputFile
 }
 
 func main() {
@@ -91,4 +70,26 @@ func main() {
 			fmt.Printf("Transcoded: %s\n", outputFile)
 		}
 	}
+}
+
+func getProfile(profile string) (Profile, error) {
+	for k, y := range profileMap {
+		if k == profile {
+			return y, nil
+		}
+	}
+	return Profile{}, fmt.Errorf("ERROR")
+}
+
+func getCmdsAndOutputFile(inputFile string) ([]string, string) {
+	name := filepath.Base(inputFile)
+	profile, err := getProfile(filePtn)
+	if err != nil {
+		panic(err)
+	}
+	cmds := []string{"-i", inputFile}
+	cmds = append(cmds, profile.Args...)
+	outputFile := filepath.Join(targetDirectory, strings.ReplaceAll(name, filePtn, profile.Ext))
+	cmds = append(cmds, outputFile)
+	return cmds, outputFile
 }
