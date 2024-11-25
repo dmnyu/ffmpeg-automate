@@ -23,6 +23,13 @@ type Profile struct {
 
 var profileMap = map[string]Profile{
 	"_d.wav": {Args: []string{"-c:a", "aac"}, Ext: "_s.m4a"},
+	"d.wav":  {Args: []string{"-c:a", "aac"}, Ext: "_s.m4a"},
+	"_m.wav": {Args: []string{"-c:a", "aac"}, Ext: "_s.m4a"},
+}
+
+func init() {
+	flag.StringVar(&targetDirectory, "target", "", "")
+	flag.StringVar(&filePtn, "pattern", "", "")
 }
 
 func getProfile(profile string) (Profile, error) {
@@ -32,11 +39,6 @@ func getProfile(profile string) (Profile, error) {
 		}
 	}
 	return Profile{}, fmt.Errorf("ERROR")
-}
-
-func init() {
-	flag.StringVar(&targetDirectory, "target", "", "")
-	flag.StringVar(&filePtn, "pattern", "", "")
 }
 
 func getCmdsAndOutputFile(inputFile string) ([]string, string) {
